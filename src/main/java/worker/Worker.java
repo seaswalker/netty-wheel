@@ -40,7 +40,7 @@ public class Worker implements Runnable, LifeCycle {
 	}
 	
 	/**
-	 * 向队列天剑任务
+	 * 向队列添加任务
 	 * @param task
 	 * @return true，如果添加成功
 	 */
