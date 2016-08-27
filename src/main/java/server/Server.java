@@ -132,7 +132,6 @@ public final class Server implements LifeCycle {
 						// register operation failed
 						logger.debug("Register channel to selector failed.");
 					}
-					;
 				} catch (IOException e) {
 					logger.debug("Client accepted failded: " + e.getMessage());
 				}

@@ -18,6 +18,9 @@ public class Client {
 		bos.write(arr);
 		bos.flush();
 		TimeUnit.SECONDS.sleep(6);
+		bos.write("Manchester United FC".getBytes());
+		bos.flush();
+		TimeUnit.SECONDS.sleep(6);
 		bos.close();
 		socket.close();
 	}
