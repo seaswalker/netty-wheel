@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 
 import worker.WorkerManager;
 import manager.AbstractManager;
+import manager.ChooseStrategy;
 
 /**
  * Selector管理器，负责对Selector的启动、负载均衡处理
@@ -22,6 +23,11 @@ public class SelectorManager extends AbstractManager<QueuedSelector> {
 		super(s, executor);
 	}
 	
+	public SelectorManager(int s, ExecutorService executor,
+			ChooseStrategy<QueuedSelector> chooseStrategy) {
+		super(s, executor, chooseStrategy);
+	}
+
 	public void setHandlerChain(HandlerChain handlerChain) {
 		this.handlerChain = handlerChain;
 	}

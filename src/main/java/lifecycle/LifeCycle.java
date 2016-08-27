@@ -1,4 +1,4 @@
-package manager;
+package lifecycle;
 
 public interface LifeCycle {
 

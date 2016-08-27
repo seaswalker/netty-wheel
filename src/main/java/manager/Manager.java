@@ -1,5 +1,7 @@
 package manager;
 
+import lifecycle.LifeCycle;
+
 /**
  * 对一组线程进行管理
  * @author skywalker
@@ -7,12 +9,10 @@ package manager;
  */
 public interface Manager<T> extends LifeCycle {
 
-	public void setChooseStrategy(ChooseStrategy<T> chooseStrategy);
-	
 	/**
 	 * 从管理的线程中选取一个
-	 * @return
+	 * @return <T>
 	 */
-	public T chooseOne();
+	public T chooseOne(Object param);
 	
 }

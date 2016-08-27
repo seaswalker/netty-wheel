@@ -1,5 +1,7 @@
 package selector;
 
+import handler.HandlerChain;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -17,9 +19,10 @@ import org.slf4j.LoggerFactory;
 
 import worker.WorkerManager;
 import context.HandlerContext;
+import event.ChannelActiveEvent;
 import event.ChannelInActiveEvent;
 import event.ChannelReadEvent;
-import manager.LifeCycle;
+import lifecycle.LifeCycle;
 
 /**
  * 拥有自己的工作队列的Selector
@@ -32,31 +35,32 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 	private Selector selector;
 	private final ArrayDeque<Runnable> jobs;
 	private final static int defaultQueueSize = 100;
-	//默认ByteBuffer分配大小
+	// 默认ByteBuffer分配大小
 	private static final int defaultAllocateSize = 1024;
 	private final ExecutorService executor;
 	private boolean closed = false;
-	private static final Logger logger = LoggerFactory.getLogger(QueuedSelector.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(QueuedSelector.class);
 	private final Runnable eventProcessor = new EventProcessor();
 	private final Lock lock = new ReentrantLock();
 	private SelectorManager selectorManager;
 	private WorkerManager workerManager;
-	
+
 	public QueuedSelector(ExecutorService executor) {
 		this(0, executor);
 	}
 
 	public QueuedSelector(int capacity, ExecutorService executor) {
-		if (capacity < 1) 
+		if (capacity < 1)
 			capacity = defaultQueueSize;
 		jobs = new ArrayDeque<>(defaultQueueSize);
 		this.executor = executor;
 	}
-	
+
 	public void setSelectorManager(SelectorManager selectorManager) {
 		this.selectorManager = selectorManager;
 	}
-	
+
 	public void setWorkerManager(WorkerManager workerManager) {
 		this.workerManager = workerManager;
 	}
@@ -73,25 +77,27 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 			logger.error("Selector open failed: " + e.getMessage());
 		}
 	}
-	
+
 	/**
-	 * 向Selector注册事件
-	 * @return 提交成功返回true
+	 * Register the channel to the selector with the interested ops.
+	 * 
+	 * @return boolean 是否提交成功
 	 */
 	public boolean register(SocketChannel channel, int ops) {
 		Register register = new Register(channel, ops);
-		boolean result;
+		boolean result = false;
 		lock.lock();
 		try {
 			result = jobs.offer(register);
 		} finally {
 			lock.unlock();
 		}
-		//唤醒Selector
-		selector.wakeup();
+		if (result) {
+			// 唤醒Selector
+			selector.wakeup();
+		}
 		return result;
 	}
-
 
 	@Override
 	public void run() {
@@ -107,9 +113,9 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 				eventProcessor.run();
 			else
 				task.run();
-		} 
+		}
 	}
-	
+
 	/**
 	 * 向Selector注册感兴趣的事件
 	 * 
@@ -117,10 +123,10 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 	 *
 	 */
 	private class Register implements Runnable {
-		
+
 		private final SocketChannel channel;
 		private final int ops;
-		
+
 		public Register(SocketChannel channel, int ops) {
 			this.channel = channel;
 			this.ops = ops;
@@ -129,14 +135,22 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 		@Override
 		public void run() {
 			try {
-				channel.register(selector, ops);
+				SelectionKey key = channel.register(selector, ops);
+				// fire the ChannelActiveEvent
+				HandlerChain handlerChain = selectorManager.getHandlerChain();
+				HandlerContext context = new HandlerContext(
+						handlerChain.getInBoundHandlers(),
+						handlerChain.getOutBoundHandlers(), true);
+				context.setChannel(channel);
+				key.attach(context);
+				workerManager.chooseOne(channel).submit(new ChannelActiveEvent(context));
 			} catch (ClosedChannelException e) {
 				logger.error("Channel register failed: " + e.getMessage());
 			}
 		}
-		
+
 	}
-	
+
 	/**
 	 * 处理Selector事件
 	 * 
@@ -144,7 +158,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 	 *
 	 */
 	private class EventProcessor implements Runnable {
-		
+
 		@Override
 		public void run() {
 			try {
@@ -153,15 +167,17 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 					Set<SelectionKey> keys = selector.selectedKeys();
 					for (SelectionKey key : keys) {
 						if (key.isReadable()) {
-							SocketChannel channel = (SocketChannel) key.channel();
-							ByteBuffer buffer = ByteBuffer.allocate(defaultAllocateSize);
+							SocketChannel channel = (SocketChannel) key
+									.channel();
+							ByteBuffer buffer = ByteBuffer
+									.allocate(defaultAllocateSize);
 							int n = channel.read(buffer);
 							if (n == -1) {
 								processInActive(key);
 							} else {
-								processRead(buffer);
+								processRead(buffer, key);
 							}
-						} 
+						}
 					}
 					keys.clear();
 				}
@@ -170,27 +186,49 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 				closed = true;
 			}
 		}
-		
+
+		/**
+		 * 如果SelectionKey.attachment()返回空，那么重新构造一个HandlerContext， 否则使用原有的。
+		 * 
+		 * @param attachment
+		 *            {@link Object}
+		 * @return {@link HandlerContext}
+		 */
+		private HandlerContext checkAttachment(Object attachment) {
+			HandlerContext context;
+			if (attachment == null) {
+				HandlerChain handlerChain = selectorManager.getHandlerChain();
+				context = new HandlerContext(handlerChain.getInBoundHandlers(),
+						handlerChain.getOutBoundHandlers(), true);
+			} else {
+				context = (HandlerContext) attachment;
+			}
+			return context;
+		}
+
 		/**
 		 * 客户端断开连接
 		 */
 		private void processInActive(SelectionKey key) {
-			HandlerContext context = new HandlerContext(selectorManager.getHandlerChain(), true);
-			workerManager.chooseOne().submit(new ChannelInActiveEvent(context));
+			HandlerContext context = checkAttachment(key.attachment());
+			workerManager.chooseOne(context.getChannel()).submit(new ChannelInActiveEvent(context));
 			key.cancel();
 		}
 
 		/**
 		 * 处理读事件
-		 * @param channel 客户端连接
-		 * @throws IOException 
+		 * 
+		 * @param buffer
+		 *            {@link ByteBuffer} 读取的数据
+		 * @param key
+		 *            {@link SelectionKey}
+		 * @throws IOException
 		 */
-		private void processRead(ByteBuffer buffer) throws IOException {
-			//触发Handler链
-			HandlerContext context = new HandlerContext(selectorManager.getHandlerChain(), true);
-			workerManager.chooseOne().submit(new ChannelReadEvent(context, buffer));
+		private void processRead(ByteBuffer buffer, SelectionKey key)
+				throws IOException {
+			HandlerContext context = checkAttachment(key.attachment());
+			workerManager.chooseOne(context.getChannel()).submit(new ChannelReadEvent(context, buffer));
 		}
-		
 	}
-	
+
 }

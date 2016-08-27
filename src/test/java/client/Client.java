@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
@@ -12,9 +13,11 @@ public class Client {
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(8080));
 		BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
-		bos.write("Hello, Server".getBytes());
+		byte[] arr = new byte[10];
+		Arrays.fill(arr, (byte) 'a');
+		bos.write(arr);
 		bos.flush();
-		TimeUnit.SECONDS.sleep(5);
+		TimeUnit.SECONDS.sleep(6);
 		bos.close();
 		socket.close();
 	}

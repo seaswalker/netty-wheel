@@ -1,6 +1,10 @@
 package manager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
+
+import lifecycle.LifeCycle;
 
 /**
  * Manager骨架实现
@@ -10,31 +14,40 @@ import java.util.concurrent.ExecutorService;
  */
 public abstract class AbstractManager<T> implements Manager<T> {
 
-	protected final T[] candidates;
+	protected List<T> candidates;
 	protected final ExecutorService executor;
-	private final ChooseStrategy<T> defaultStrategy;
 	private ChooseStrategy<T> chooseStrategy;
+	private final int s;
 	
-	@SuppressWarnings("unchecked")
 	public AbstractManager(int s, ExecutorService executor) {
+		this(s, executor, null);
+	}
+	
+	public AbstractManager(int s, ExecutorService executor, ChooseStrategy<T> chooseStrategy) {
 		if (s < 1) {
-			throw new IllegalArgumentException("The Selectors count cant't be less than 1.");
+			throw new IllegalArgumentException("The candidates count cant't be less than 1.");
 		}
-		candidates = (T[]) new Object[s];
+		candidates = new ArrayList<T>(s);
+		this.s = s;
 		this.executor = executor;
-		defaultStrategy = new DefaultChooseStrategy<T>(candidates);
+		if (chooseStrategy != null) {
+			this.chooseStrategy = chooseStrategy;
+		} else {
+			this.chooseStrategy = new DefaultChooseStrategy<T>();
+		}
 	}
 	
 	@Override
 	public void start() {
-		for (int i = 0, l = candidates.length; i < l; i++) {
+		for (int i = 0; i < s; i++) {
 			T candidate = newCandidate();
-			candidates[i] = candidate;
+			candidates.add(candidate);
 			if (candidate instanceof LifeCycle) {
 				LifeCycle lifeCycle = (LifeCycle) candidate;
 				lifeCycle.start();
 			}
 		}
+		chooseStrategy.setCandidates(candidates);
 	}
 	
 	/**
@@ -44,20 +57,8 @@ public abstract class AbstractManager<T> implements Manager<T> {
 	protected abstract T newCandidate();
 	
 	@Override
-	public void setChooseStrategy(ChooseStrategy<T> chooseStrategy) {
-		if (chooseStrategy != null)
-			this.chooseStrategy = chooseStrategy;
-	}
-	
-	private ChooseStrategy<T> getChooseStrategy() {
-		if (chooseStrategy == null)
-			chooseStrategy = defaultStrategy;
-		return chooseStrategy;
-	}
-	
-	@Override
-	public T chooseOne() {
-		return getChooseStrategy().choose();
+	public T chooseOne(Object param) {
+		return chooseStrategy.choose(param);
 	}
 	
 }

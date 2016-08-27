@@ -4,10 +4,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
+import lifecycle.LifeCycle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import manager.LifeCycle;
 
 /**
  * 负责Handler链的调用执行
