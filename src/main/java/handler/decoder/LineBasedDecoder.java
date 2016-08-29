@@ -12,7 +12,9 @@ import handler.HandlerInitializer;
 public class LineBasedDecoder extends DelimiterBasedDecoder {
 
 	public LineBasedDecoder(char delimiter) {
-		super(delimiter);
+		//bug?
+		//DelimiterBasedDecoder只支持ASCII码，而\r\n不是一个字符，所以暂且这样处理
+		super('\n');
 	}
 	
 }
