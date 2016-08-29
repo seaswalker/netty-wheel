@@ -36,7 +36,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 	private final ArrayDeque<Runnable> jobs;
 	private final static int defaultQueueSize = 100;
 	// 默认ByteBuffer分配大小
-	private static final int defaultAllocateSize = 128;
+	private static final int defaultAllocateSize = 1024;
 	private final ExecutorService executor;
 	private boolean closed = false;
 	private static final Logger logger = LoggerFactory
