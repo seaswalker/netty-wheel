@@ -36,7 +36,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 	private final ArrayDeque<Runnable> jobs;
 	private final static int defaultQueueSize = 100;
 	// 默认ByteBuffer分配大小
-	private static final int defaultAllocateSize = 1024;
+	private static final int defaultAllocateSize = 128;
 	private final ExecutorService executor;
 	private boolean closed = false;
 	private static final Logger logger = LoggerFactory
@@ -142,6 +142,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 						handlerChain.getInBoundHandlers(),
 						handlerChain.getOutBoundHandlers(), true);
 				context.setChannel(channel);
+				context.setWorkerManager(workerManager);
 				key.attach(context);
 				workerManager.chooseOne(channel).submit(new ChannelActiveEvent(context));
 			} catch (ClosedChannelException e) {
@@ -192,14 +193,18 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 		 * 
 		 * @param attachment
 		 *            {@link Object}
+		 * @param channel 
+		 *            {@link SocketChannel}
 		 * @return {@link HandlerContext}
 		 */
-		private HandlerContext checkAttachment(Object attachment) {
+		private HandlerContext checkAttachment(Object attachment, SocketChannel channel) {
 			HandlerContext context;
 			if (attachment == null) {
 				HandlerChain handlerChain = selectorManager.getHandlerChain();
 				context = new HandlerContext(handlerChain.getInBoundHandlers(),
 						handlerChain.getOutBoundHandlers(), true);
+				context.setChannel(channel);
+				context.setWorkerManager(workerManager);
 			} else {
 				context = (HandlerContext) attachment;
 			}
@@ -210,7 +215,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 		 * 客户端断开连接
 		 */
 		private void processInActive(SelectionKey key) {
-			HandlerContext context = checkAttachment(key.attachment());
+			HandlerContext context = checkAttachment(key.attachment(), (SocketChannel) key.channel());
 			workerManager.chooseOne(context.getChannel()).submit(new ChannelInActiveEvent(context));
 			key.cancel();
 		}
@@ -226,7 +231,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
 		 */
 		private void processRead(ByteBuffer buffer, SelectionKey key)
 				throws IOException {
-			HandlerContext context = checkAttachment(key.attachment());
+			HandlerContext context = checkAttachment(key.attachment(), (SocketChannel) key.channel());
 			workerManager.chooseOne(context.getChannel()).submit(new ChannelReadEvent(context, buffer));
 		}
 	}

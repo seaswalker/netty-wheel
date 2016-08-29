@@ -123,6 +123,22 @@ public class HandlerContext {
 		++index;
 		handler.channelRead(message, this);
 	}
+	
+	/**
+	 * 多次触发后续Handler channelRead事件
+	 * 
+	 * @param messages
+	 * 				{@link List} 
+	 */
+	public void fireChannelReads(List<byte[]> messages) {
+		if (messages != null) {
+			int oldIndex = index;
+			for (int i = 0, s = messages.size(); i < s; i++) {
+				index = oldIndex;
+				fireChannelRead(messages.get(i));
+			}
+		}
+	}
 
 	/**
 	 * 触发消息写出事件
@@ -147,6 +163,8 @@ public class HandlerContext {
 	public void writeFlush(Object message) {
 		HandlerContext context = new HandlerContext(inBoundHandlers,
 				outBoundHandlers, false);
+		context.setChannel(channel);
+		context.setWorkerManager(workerManager);
 		workerManager.chooseOne(channel).submit(new ChannelWriteEvent(context, message));
 	}
 

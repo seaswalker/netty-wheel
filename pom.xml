@@ -27,5 +27,11 @@
 	    <artifactId>netty-all</artifactId>
 	    <version>4.1.4.Final</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/junit/junit -->
+	<dependency>
+	    <groupId>junit</groupId>
+	    <artifactId>junit</artifactId>
+	    <version>4.12</version>
+	</dependency>
   </dependencies>
 </project>

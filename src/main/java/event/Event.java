@@ -23,7 +23,7 @@ public abstract class Event implements Runnable {
 	}
 
 	@Override
-	public void run() {
+	public final void run() {
 		ctx.reset();
 		doRun(ctx, message);
 	}
