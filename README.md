@@ -4,6 +4,8 @@
 
 - channelActive/channelInActive/channelRead/channelWrite事件处理
 
+- HandlerInitializer 
+
 - Handler链式处理
 
 - StringEncoder/StringDecoder
