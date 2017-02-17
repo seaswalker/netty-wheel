@@ -1,7 +1,15 @@
 package lifecycle;
 
+/**
+ * 组件的生命周期.
+ *
+ * @author skywalker
+ */
 public interface LifeCycle {
 
-	public void start();
-	
+    /**
+     * 启动.
+     */
+    void start();
+
 }

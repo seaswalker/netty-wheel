@@ -12,5 +12,5 @@ public class ChannelActiveEvent extends Event {
 	protected void doRun(HandlerContext context, Object message) {
 		context.fireChannelActive();
 	}
-	
+
 }

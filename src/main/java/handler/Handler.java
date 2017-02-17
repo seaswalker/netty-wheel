@@ -1,8 +1,8 @@
 package handler;
 
 /**
- * 事件处理器
- * Mark Interface
+ * 事件处理器(Mark Interface).
+ *
  * @author skywalker
  *
  */
