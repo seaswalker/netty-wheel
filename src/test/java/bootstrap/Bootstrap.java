@@ -15,7 +15,7 @@ import handler.encoder.StringEncoder;
 import server.Server;
 
 /**
- * 启动。
+ * 启动.
  * 
  * @author skywalker
  *

@@ -3,7 +3,7 @@ package manager;
 import java.util.List;
 
 /**
- * 线程选取策略。
+ * 线程选取策略.
  *
  * @author skywalker
  */

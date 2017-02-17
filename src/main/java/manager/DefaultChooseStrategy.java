@@ -1,7 +1,7 @@
 package manager;
 
 /**
- * 默认线程选取策略--简单的递增。
+ * 默认线程选取策略--简单的递增.
  *
  * @author skywalker
  */

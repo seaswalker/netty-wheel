@@ -10,9 +10,8 @@ import manager.ChooseStrategy;
 
 /**
  * Selector管理器，负责对Selector的启动、负载均衡处理.
- * 
- * @author skywalker
  *
+ * @author skywalker
  */
 public class SelectorManager extends AbstractManager<QueuedSelector> {
 
@@ -24,7 +23,7 @@ public class SelectorManager extends AbstractManager<QueuedSelector> {
     }
 
     public SelectorManager(int s, ExecutorService executor,
-            ChooseStrategy<QueuedSelector> chooseStrategy) {
+                           ChooseStrategy<QueuedSelector> chooseStrategy) {
         super(s, executor, chooseStrategy);
     }
 

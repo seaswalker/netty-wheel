@@ -186,7 +186,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
         }
 
         /**
-         * 如果SelectionKey.attachment()返回空，那么重新构造一个HandlerContext， 否则使用原有的。
+         * 如果SelectionKey.attachment()返回空，那么重新构造一个HandlerContext, 否则使用原有的.
          *
          * @param attachment {@link Object}
          * @param channel    {@link SocketChannel}

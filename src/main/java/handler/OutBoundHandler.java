@@ -3,7 +3,7 @@ package handler;
 import context.HandlerContext;
 
 /**
- * 数据输出事件处理器
+ * 数据输出事件处理器.
  *
  * @author skywalker
  */

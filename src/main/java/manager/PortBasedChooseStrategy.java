@@ -10,10 +10,9 @@ import org.slf4j.LoggerFactory;
 import worker.Worker;
 
 /**
- * 基于远程端口的选取策略，可以保证同一个连接的事件被分发到同一个线程。
- * 
- * @author skywalker
+ * 基于远程端口的选取策略，可以保证同一个连接的事件被分发到同一个线程.
  *
+ * @author skywalker
  */
 public class PortBasedChooseStrategy extends AbstractChooseStrategy<Worker> {
 

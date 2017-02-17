@@ -6,7 +6,7 @@ import manager.AbstractManager;
 import manager.ChooseStrategy;
 
 /**
- * 管理工作线程。
+ * 管理工作线程.
  * 
  * @author skywalker
  *

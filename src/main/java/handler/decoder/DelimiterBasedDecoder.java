@@ -13,7 +13,7 @@ import handler.InBoundHandlerAdapter;
 
 /**
  * 基于分割符(ASCII)的decoder，应该配合{@link HandlerInitializer}使用.
- * 以byte数组的形式传向下一个Handler，分隔符不含在内。
+ * 以byte数组的形式传向下一个Handler，分隔符不含在内.
  *
  * @author skywalker
  */
@@ -88,7 +88,7 @@ public class DelimiterBasedDecoder extends InBoundHandlerAdapter {
     }
 
     /**
-     * 检查内容长度是否达到最大值。
+     * 检查内容长度是否达到最大值.
      *
      * @param i 内容长度
      * @return true, 如果达到
