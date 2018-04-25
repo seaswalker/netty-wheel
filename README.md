@@ -27,14 +27,14 @@
 ```java
 @Test
 public void lengthFieldBasedDecoder() {
-	Server server = new Server();
-	server.bind(8080).setHandlers(new HandlerInitializer() {
-    	@Override
-		public Handler[] init() {
-			return new Handler[] {new LengthFieldBasedDecoder(0, 4), 
-				new StringDecoder(), new SimpleInBoundHandler()};
-		}
-	}).start();
+    Server server = new Server();
+    server.bind(8080).setHandlers(new HandlerInitializer() {
+        @Override
+        public Handler[] init() {
+            return new Handler[] {new LengthFieldBasedDecoder(0, 4), 
+                new StringDecoder(), new SimpleInBoundHandler()};
+        }
+    }).start();
 }
 ```
 
@@ -66,12 +66,12 @@ public class SimpleInBoundHandler extends InBoundHandlerAdapter {
 ```java
 @Test
 public void lengthFieldBasedDecoder() throws IOException, InterruptedException {
-	byte[] result = new byte[35];
-	System.arraycopy(DataUtils.int2Bytes(31), 0, result, 0, 4);
+    byte[] result = new byte[35];
+    System.arraycopy(DataUtils.int2Bytes(31), 0, result, 0, 4);
     System.arraycopy("org.apache.commons.lang.builder".getBytes(), 0, result, 4, 31);
     for (int i = 0; i < 6; i++) {
-    	bos.write(result);
-	}
+        bos.write(result);
+    }
     TimeUnit.SECONDS.sleep(6);
 }
 ```
