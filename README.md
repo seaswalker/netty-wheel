@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/seaswalker/MiniNetty.svg?branch=master)](https://travis-ci.org/seaswalker/MiniNetty)
+
 # 实现的功能
 
 - channelActive/channelInActive/channelRead/channelWrite事件处理
