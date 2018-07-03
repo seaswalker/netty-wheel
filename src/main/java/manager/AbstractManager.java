@@ -3,6 +3,7 @@ package manager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import lifecycle.LifeCycle;
 
@@ -11,9 +12,9 @@ import lifecycle.LifeCycle;
  *
  * @author skywalker
  */
-public abstract class AbstractManager<T> implements Manager<T> {
+public abstract class AbstractManager<T extends LifeCycle> implements Manager<T> {
 
-    protected List<T> candidates;
+    private List<T> candidates;
     protected final ExecutorService executor;
     private ChooseStrategy<T> chooseStrategy;
     private final int s;
@@ -41,12 +42,14 @@ public abstract class AbstractManager<T> implements Manager<T> {
         for (int i = 0; i < s; i++) {
             T candidate = newCandidate();
             candidates.add(candidate);
-            if (candidate instanceof LifeCycle) {
-                LifeCycle lifeCycle = (LifeCycle) candidate;
-                lifeCycle.start();
-            }
+            candidate.start();
         }
         chooseStrategy.setCandidates(candidates);
+    }
+
+    @Override
+    public void close() {
+        candidates.forEach(LifeCycle::close);
     }
 
     /**

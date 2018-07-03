@@ -12,4 +12,6 @@ public interface LifeCycle {
      */
     void start();
 
+    void close();
+
 }

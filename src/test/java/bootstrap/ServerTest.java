@@ -20,10 +20,10 @@ import server.Server;
  * @author skywalker
  *
  */
-public class Bootstrap {
+public class ServerTest {
 
     @Test
-    public void lengthFieldBasedDecoder() {
+    public void lengthFieldBasedDecoder() throws InterruptedException {
         Server server = new Server();
         server.bind(8080).setHandlers(new HandlerInitializer() {
             @Override
@@ -31,6 +31,10 @@ public class Bootstrap {
                 return new Handler[] {new LengthFieldBasedDecoder(0, 4), new StringDecoder(), new SimpleInBoundHandler()};
             }
         }).start();
+
+        TimeUnit.SECONDS.sleep(2);
+
+        server.close();
     }
 
     @Test
@@ -42,14 +46,20 @@ public class Bootstrap {
                 return new Handler[] {new DelimiterBasedDecoder('a'), new StringDecoder(), new SimpleInBoundHandler()};
             }
         }).start();
-        TimeUnit.MINUTES.sleep(10);
+
+        TimeUnit.SECONDS.sleep(2);
+
+        server.close();
     }
 
     @Test
     public void response() throws InterruptedException {
         Server server = new Server();
         server.bind(8080).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
-        TimeUnit.MINUTES.sleep(10);
+
+        TimeUnit.SECONDS.sleep(2);
+
+        server.close();
     }
 
 }

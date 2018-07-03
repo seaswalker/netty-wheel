@@ -20,6 +20,8 @@ public class Worker implements Runnable, LifeCycle {
     private final BlockingQueue<Runnable> jobs;
     private static final int defaultQueueSize = 100;
     private final ExecutorService executors;
+
+    private static final Runnable POISON = () -> {};
     private static final Logger logger = LoggerFactory.getLogger(Worker.class);
 
     protected Worker(ExecutorService executors) {
@@ -39,6 +41,15 @@ public class Worker implements Runnable, LifeCycle {
         executors.execute(this);
     }
 
+    @Override
+    public void close() {
+        try {
+            // just wait
+            jobs.put(POISON);
+        } catch (InterruptedException ignore) {
+        }
+    }
+
     /**
      * 向队列添加任务.
      *
@@ -54,6 +65,9 @@ public class Worker implements Runnable, LifeCycle {
         try {
             while (true) {
                 Runnable task = jobs.take();
+                if (task == POISON) {
+                    break;
+                }
                 task.run();
             }
         } catch (InterruptedException e) {

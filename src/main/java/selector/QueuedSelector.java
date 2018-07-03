@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import util.CloseableUtils;
 import worker.WorkerManager;
 import context.HandlerContext;
 import event.ChannelActiveEvent;
@@ -32,18 +33,20 @@ import lifecycle.LifeCycle;
 public final class QueuedSelector implements Runnable, LifeCycle {
 
     private Selector selector;
+    private SelectorManager selectorManager;
+    private WorkerManager workerManager;
+
+    private volatile boolean closed = false;
+
     private final ArrayDeque<Runnable> jobs;
     private final static int defaultQueueSize = 100;
     // 默认ByteBuffer分配大小
-    private static final int defaultAllocateSize = 1024;
     private final ExecutorService executor;
-    private boolean closed = false;
-    private static final Logger logger = LoggerFactory
-            .getLogger(QueuedSelector.class);
     private final Runnable eventProcessor = new EventProcessor();
     private final Lock lock = new ReentrantLock();
-    private SelectorManager selectorManager;
-    private WorkerManager workerManager;
+
+    private static final int defaultAllocateSize = 1024;
+    private static final Logger logger = LoggerFactory.getLogger(QueuedSelector.class);
 
     public QueuedSelector(ExecutorService executor) {
         this(0, executor);
@@ -77,6 +80,12 @@ public final class QueuedSelector implements Runnable, LifeCycle {
         }
     }
 
+    @Override
+    public void close() {
+        closed = true;
+        selector.wakeup();
+    }
+
     /**
      * Register the channel to the selector with the interested ops.
      *
@@ -84,7 +93,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
      */
     public boolean register(SocketChannel channel, int ops) {
         Register register = new Register(channel, ops);
-        boolean result = false;
+        boolean result;
         lock.lock();
         try {
             result = jobs.offer(register);
@@ -113,6 +122,8 @@ public final class QueuedSelector implements Runnable, LifeCycle {
             else
                 task.run();
         }
+
+        CloseableUtils.closeQuietly(selector);
     }
 
     /**
@@ -219,8 +230,6 @@ public final class QueuedSelector implements Runnable, LifeCycle {
          * 处理读事件.
          *
          * @param buffer {@link ByteBuffer} 读取的数据
-         * @param key    {@link SelectionKey}
-         * @throws IOException
          */
         private void processRead(ByteBuffer buffer, SelectionKey key)
                 throws IOException {

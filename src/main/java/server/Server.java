@@ -16,6 +16,7 @@ import handler.HandlerChain;
 import lifecycle.LifeCycle;
 import manager.PortBasedChooseStrategy;
 import selector.SelectorManager;
+import util.CloseableUtils;
 import worker.WorkerManager;
 
 /**
@@ -25,14 +26,18 @@ import worker.WorkerManager;
  */
 public final class Server implements LifeCycle {
 
-    private final ExecutorService executor;
     // 默认以阻塞的方式监听
     private boolean block = true;
     private ServerSocketChannel serverSocketChannel;
+
+    private volatile boolean closed = false;
+
+    private final ExecutorService executor;
     private final SelectorManager selectorManager;
     private final WorkerManager workerManager;
     private final int acceptors;
     private final HandlerChain handlerChain;
+
     private final static Logger logger = LoggerFactory.getLogger(Server.class);
 
     public Server() {
@@ -93,8 +98,8 @@ public final class Server implements LifeCycle {
     }
 
     public Server setHandlers(Handler... handlers) {
-        for (int i = 0, l = handlers.length; i < l; i++) {
-            handlerChain.addHandler(handlers[i]);
+        for (Handler handler : handlers) {
+            handlerChain.addHandler(handler);
         }
         return this;
     }
@@ -111,6 +116,17 @@ public final class Server implements LifeCycle {
         logger.info("Server starts successfully.");
     }
 
+    @Override
+    public void close() {
+        workerManager.close();
+        selectorManager.close();
+
+        executor.shutdown();
+
+        closed = true;
+        CloseableUtils.closeQuietly(serverSocketChannel);
+    }
+
     /**
      * 接收客户端连接.
      *
@@ -125,13 +141,20 @@ public final class Server implements LifeCycle {
                     SocketChannel channel = serverSocketChannel.accept();
                     channel.configureBlocking(false);
                     boolean result = selectorManager.chooseOne(null).register(
-                            channel, SelectionKey.OP_READ);
+                            channel, SelectionKey.OP_READ
+                    );
+
                     if (!result) {
                         // register operation failed
                         logger.debug("Register channel to selector failed.");
                     }
                 } catch (IOException e) {
-                    logger.debug("Client accepted failed: " + e.getMessage());
+                    if (closed) {
+                        logger.debug("Close method was called.");
+                        break;
+                    } else {
+                        logger.debug("Client accepted failed: " + e.getMessage());
+                    }
                 }
             }
         }
