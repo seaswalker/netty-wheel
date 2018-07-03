@@ -20,6 +20,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.Server;
 import util.DataUtils;
 
@@ -28,10 +30,15 @@ import util.DataUtils;
  */
 public class ClientTest {
 
+    private static int PORT = 8081;
+
+    private static final Logger log = LoggerFactory.getLogger(ClientTest.class);
+
     @Test
     public void lengthFieldBasedDecoder() throws IOException, InterruptedException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new HandlerInitializer() {
+        int port = (PORT++);
+        server.bind(port).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
                 return new Handler[] {new LengthFieldBasedDecoder(0, 4), new StringDecoder(), new SimpleInBoundHandler()};
@@ -39,7 +46,7 @@ public class ClientTest {
         }).start();
 
         TimeUnit.SECONDS.sleep(2);
-        BufferedOutputStream bos = connectServer().bos;
+        BufferedOutputStream bos = connectServer(port).bos;
 
         byte[] result = new byte[35];
         System.arraycopy(DataUtils.int2Bytes(31), 0, result, 0, 4);
@@ -58,7 +65,8 @@ public class ClientTest {
     @Test
     public void delimiterBasedDecoder() throws InterruptedException, IOException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new HandlerInitializer() {
+        int port = (PORT++);
+        server.bind(port).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
                 return new Handler[] {new DelimiterBasedDecoder('a'), new StringDecoder(), new SimpleInBoundHandler()};
@@ -66,7 +74,7 @@ public class ClientTest {
         }).start();
 
         TimeUnit.SECONDS.sleep(2);
-        BufferedOutputStream bos = connectServer().bos;
+        BufferedOutputStream bos = connectServer(port).bos;
 
         byte[] data = "This is a beautiful world.\n".getBytes();
         for (int i = 0; i < 12; i++) {
@@ -83,11 +91,12 @@ public class ClientTest {
     @Test
     public void response() throws IOException, InterruptedException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
+        int port = (PORT++);
+        server.bind(port).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
 
         TimeUnit.SECONDS.sleep(2);
 
-        Pair pair = connectServer();
+        Pair pair = connectServer(port);
         BufferedReader br = new BufferedReader(new InputStreamReader(pair.socket.getInputStream()));
         pair.bos.write("skywalker".getBytes());
         pair.bos.flush();
@@ -100,9 +109,10 @@ public class ClientTest {
         br.close();
     }
 
-    private Pair connectServer() throws IOException {
+    private Pair connectServer(int port) throws IOException {
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress("localhost", 8080));
+        log.info("尝试连接: {}端口.", port);
+        socket.connect(new InetSocketAddress("localhost", port));
         BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
         return new Pair(bos, socket);
     }

@@ -91,7 +91,7 @@ public final class Server implements LifeCycle {
             serverSocketChannel.bind(new InetSocketAddress(port));
             serverSocketChannel.configureBlocking(block);
         } catch (IOException e) {
-            logger.error("The port " + port + "bind failed.");
+            logger.error("The port " + port + " bind failed.");
             System.exit(1);
         }
         return this;

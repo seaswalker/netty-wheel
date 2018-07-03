@@ -22,10 +22,12 @@ import server.Server;
  */
 public class ServerTest {
 
+    private static int PORT = 8081;
+
     @Test
     public void lengthFieldBasedDecoder() throws InterruptedException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new HandlerInitializer() {
+        server.bind(PORT++).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
                 return new Handler[] {new LengthFieldBasedDecoder(0, 4), new StringDecoder(), new SimpleInBoundHandler()};
@@ -40,7 +42,7 @@ public class ServerTest {
     @Test
     public void delimiterBasedDecoder() throws InterruptedException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new HandlerInitializer() {
+        server.bind(PORT++).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
                 return new Handler[] {new DelimiterBasedDecoder('a'), new StringDecoder(), new SimpleInBoundHandler()};
@@ -55,7 +57,7 @@ public class ServerTest {
     @Test
     public void response() throws InterruptedException {
         Server server = new Server();
-        server.bind(8080).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
+        server.bind(PORT++).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
 
         TimeUnit.SECONDS.sleep(2);
 
