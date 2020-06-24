@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/seaswalker/netty-wheel.svg?branch=master)](https://travis-ci.org/seaswalker/netty-wheel)
-[![codecov](https://codecov.io/gh/seaswalker/MiniNetty/branch/master/graph/badge.svg)](https://codecov.io/gh/seaswalker/MiniNetty)
+[![codecov](https://codecov.io/gh/seaswalker/netty-wheel/branch/master/graph/badge.svg)](https://codecov.io/gh/seaswalker/netty-wheel)
 
 # 实现的功能
 
