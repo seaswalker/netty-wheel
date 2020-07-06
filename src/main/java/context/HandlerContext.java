@@ -154,8 +154,7 @@ public class HandlerContext {
      * @param message {@link Object} 数据
      */
     public void writeFlush(Object message) {
-        HandlerContext context = new HandlerContext(inBoundHandlers,
-                outBoundHandlers, false);
+        HandlerContext context = new HandlerContext(inBoundHandlers, outBoundHandlers, false);
         context.setChannel(channel);
         context.setWorkerManager(workerManager);
         workerManager.chooseOne(channel).submit(new ChannelWriteEvent(context, message));

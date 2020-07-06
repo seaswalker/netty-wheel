@@ -2,6 +2,7 @@ package handler.decoder;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import handler.InBoundHandlerAdapter;
  */
 public class StringDecoder extends InBoundHandlerAdapter {
 
-    private static final Charset defaultCharSet = Charset.forName("UTF-8");
+    private static final Charset defaultCharSet = StandardCharsets.UTF_8;
     private static final Logger logger = LoggerFactory.getLogger(StringDecoder.class);
     private final Charset charset;
 

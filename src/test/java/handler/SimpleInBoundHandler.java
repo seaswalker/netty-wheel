@@ -21,7 +21,8 @@ public class SimpleInBoundHandler extends InBoundHandlerAdapter {
 
     @Override
     public void channelRead(Object message, HandlerContext context) {
-        System.out.println(message.toString());
+        // 去掉前面的4字节
+        context.writeFlush(((String) message).substring(4) + "\n");
     }
 
 }

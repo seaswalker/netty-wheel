@@ -231,8 +231,7 @@ public final class QueuedSelector implements Runnable, LifeCycle {
          *
          * @param buffer {@link ByteBuffer} 读取的数据
          */
-        private void processRead(ByteBuffer buffer, SelectionKey key)
-                throws IOException {
+        private void processRead(ByteBuffer buffer, SelectionKey key) {
             HandlerContext context = checkAttachment(key.attachment(), (SocketChannel) key.channel());
             workerManager.chooseOne(context.getChannel()).submit(new ChannelReadEvent(context, buffer));
         }

@@ -15,9 +15,7 @@ import handler.SimpleInBoundHandler;
 import handler.decoder.DelimiterBasedDecoder;
 import handler.decoder.LengthFieldBasedDecoder;
 import handler.decoder.StringDecoder;
-import handler.encoder.StringEncoder;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -35,89 +33,90 @@ public class ClientTest {
     private static final Logger log = LoggerFactory.getLogger(ClientTest.class);
 
     @Test
-    public void lengthFieldBasedDecoder() throws IOException, InterruptedException {
+    public void testLengthFieldBasedDecoder() throws IOException, InterruptedException {
         Server server = new Server();
         int port = (PORT++);
         server.bind(port).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
-                return new Handler[] {new LengthFieldBasedDecoder(0, 4), new StringDecoder(), new SimpleInBoundHandler()};
+                return new Handler[] {
+                        new LengthFieldBasedDecoder(0, 4),
+                        new StringDecoder(),
+                        new SimpleInBoundHandler()
+                };
             }
         }).start();
 
         TimeUnit.SECONDS.sleep(2);
-        BufferedOutputStream bos = connectServer(port).bos;
+        Pair pair = connectServer(port);
 
+        BufferedOutputStream bos = pair.bos;
         byte[] result = new byte[35];
         System.arraycopy(DataUtils.int2Bytes(31), 0, result, 0, 4);
         System.arraycopy("org.apache.commons.lang.builder".getBytes(), 0, result, 4, 31);
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 2; i++) {
             bos.write(result);
         }
         bos.flush();
 
+        BufferedReader br = new BufferedReader(new InputStreamReader(pair.socket.getInputStream()));
+        String line = br.readLine();
+
+        // readLine会吃掉换行符
+        Assert.assertEquals("org.apache.commons.lang.builder", line);
+
+        line = br.readLine();
+        Assert.assertEquals("org.apache.commons.lang.builder", line);
+
         TimeUnit.SECONDS.sleep(6);
 
         bos.close();
+        br.close();
         server.close();
     }
 
     @Test
-    public void delimiterBasedDecoder() throws InterruptedException, IOException {
+    public void testDelimiterBasedDecoder() throws InterruptedException, IOException {
         Server server = new Server();
         int port = (PORT++);
         server.bind(port).setHandlers(new HandlerInitializer() {
             @Override
             public Handler[] init() {
-                return new Handler[] {new DelimiterBasedDecoder('a'), new StringDecoder(), new SimpleInBoundHandler()};
+                return new Handler[] {new DelimiterBasedDecoder('a'), new StringDecoder(), new ResponseHandler()};
             }
         }).start();
 
         TimeUnit.SECONDS.sleep(2);
-        BufferedOutputStream bos = connectServer(port).bos;
+        Pair pair = connectServer(port);
 
-        byte[] data = "This is a beautiful world.\n".getBytes();
-        for (int i = 0; i < 12; i++) {
-            bos.write(data);
-        }
+        BufferedOutputStream bos = pair.bos;
+        byte[] data = "This isadoga".getBytes();
+        bos.write(data);
         bos.flush();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(pair.socket.getInputStream()));
+        String line  = br.readLine();
+        Assert.assertEquals("This is", line);
+
+        line = br.readLine();
+        Assert.assertEquals("dog", line);
 
         TimeUnit.SECONDS.sleep(2);
 
         bos.close();
         server.close();
-    }
-
-    @Test
-    public void response() throws IOException, InterruptedException {
-        Server server = new Server();
-        int port = (PORT++);
-        server.bind(port).setHandlers(new StringDecoder(), new ResponseHandler(), new StringEncoder()).start();
-
-        TimeUnit.SECONDS.sleep(2);
-
-        Pair pair = connectServer(port);
-        BufferedReader br = new BufferedReader(new InputStreamReader(pair.socket.getInputStream()));
-        pair.bos.write("skywalker".getBytes());
-        pair.bos.flush();
-
-        TimeUnit.SECONDS.sleep(2);
-
-        System.out.println(br.readLine());
-
-        server.close();
-        br.close();
     }
 
     private Pair connectServer(int port) throws IOException {
         Socket socket = new Socket();
         log.info("尝试连接: {}端口.", port);
-        socket.connect(new InetSocketAddress("localhost", port));
+        socket.connect(new InetSocketAddress("localhost", port), 1000);
         BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
         return new Pair(bos, socket);
     }
 
-    private class Pair {
+    private static class Pair {
+
         BufferedOutputStream bos;
         Socket socket;
 

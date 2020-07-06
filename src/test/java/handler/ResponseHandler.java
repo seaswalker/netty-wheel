@@ -1,5 +1,8 @@
 package handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import context.HandlerContext;
 
 /**
@@ -10,9 +13,13 @@ import context.HandlerContext;
  */
 public class ResponseHandler extends InBoundHandlerAdapter {
 
+    private static final Logger log = LoggerFactory.getLogger(ResponseHandler.class);
+
     @Override
     public void channelRead(Object message, HandlerContext context) {
-        context.writeFlush("Hello: " + (String) message + "!\n");
+        String messageStr = (String) message, response = (messageStr + "\n");
+        log.info("收到请求详细: {}, 回复响应: {}.", message, response);
+        context.writeFlush(response);
     }
 
 }
