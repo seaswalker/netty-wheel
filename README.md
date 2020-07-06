@@ -79,3 +79,9 @@ public void lengthFieldBasedDecoder() throws IOException, InterruptedException {
 }
 ```
 
+# TODO
+
+为了确保测试用例能够通过，使用了基于端口取余的worker线程分配方式，这样保证了向client发送数据的先后顺序。目前写功能很原始，只是将经过OutboundHandler处理的数据不做任何操作直接写入，这样的问题在于：
+1. OS写缓冲区满，写入失败
+2. OS缓冲区可用空间不足一次性写入，要分多次写入
+3. 客户端如果已断开或网络出问题怎么办，可能需要心跳检测之类的手段
