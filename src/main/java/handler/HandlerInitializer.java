@@ -18,8 +18,8 @@ public abstract class HandlerInitializer extends InBoundHandlerAdapter {
         Handler[] handlers = init();
         Objects.requireNonNull(handlers);
         context.removeHandlerInitializer(this);
-        for (int i = 0, l = handlers.length; i < l; i++) {
-            context.addHandler(handlers[i]);
+        for (Handler handler : handlers) {
+            context.addHandler(handler);
         }
         context.fireChannelActive();
     }

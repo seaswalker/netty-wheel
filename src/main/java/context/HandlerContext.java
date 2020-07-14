@@ -54,9 +54,8 @@ public class HandlerContext {
      * 添加Handler，用于HandlerInitializer，对HandlerContext的添加并不会影响HandlerChain.
      *
      * @param handler {@link Handler}
-     * @return this {@link HandlerContext}
      */
-    public HandlerContext addHandler(Handler handler) {
+    public void addHandler(Handler handler) {
         if (handler instanceof InBoundHandler) {
             inBoundHandlers.add((InBoundHandler) handler);
             ++inBoundSize;
@@ -64,7 +63,6 @@ public class HandlerContext {
             outBoundHandlers.add((OutBoundHandler) handler);
             ++outBoundSize;
         }
-        return this;
     }
 
     /**
@@ -128,9 +126,9 @@ public class HandlerContext {
     public void fireChannelReads(List<byte[]> messages) {
         if (messages != null) {
             int oldIndex = index;
-            for (int i = 0, s = messages.size(); i < s; i++) {
+            for (byte[] message : messages) {
                 index = oldIndex;
-                fireChannelRead(messages.get(i));
+                fireChannelRead(message);
             }
         }
     }

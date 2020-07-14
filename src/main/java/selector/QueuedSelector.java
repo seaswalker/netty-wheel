@@ -149,7 +149,9 @@ public final class QueuedSelector implements Runnable, LifeCycle {
                 HandlerChain handlerChain = selectorManager.getHandlerChain();
                 HandlerContext context = new HandlerContext(
                         handlerChain.getInBoundHandlers(),
-                        handlerChain.getOutBoundHandlers(), true);
+                        handlerChain.getOutBoundHandlers(),
+                        true
+                );
                 context.setChannel(channel);
                 context.setWorkerManager(workerManager);
                 key.attach(context);
@@ -207,8 +209,11 @@ public final class QueuedSelector implements Runnable, LifeCycle {
             HandlerContext context;
             if (attachment == null) {
                 HandlerChain handlerChain = selectorManager.getHandlerChain();
-                context = new HandlerContext(handlerChain.getInBoundHandlers(),
-                        handlerChain.getOutBoundHandlers(), true);
+                context = new HandlerContext(
+                        handlerChain.getInBoundHandlers(),
+                        handlerChain.getOutBoundHandlers(),
+                        true
+                );
                 context.setChannel(channel);
                 context.setWorkerManager(workerManager);
             } else {
